@@ -2,17 +2,19 @@
 <html lang="fr">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SV Defender</title>
+<title>SV Defender v2</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#0d1724;color:#e2ebf7;font:16px/1.5 system-ui}main{max-width:1100px;margin:auto;padding:30px 18px}header{padding:30px;border-left:4px solid #66e6c3;background:#152438}h1{font-size:clamp(35px,7vw,70px);line-height:1;margin:12px 0}.grid{display:grid;grid-template-columns:1fr 1.3fr;gap:18px;margin-top:18px}section{padding:20px;background:#152438;border-radius:12px}label{display:block;margin-top:10px}textarea{width:100%;background:#0d1724;color:inherit;padding:10px;border:1px solid #647891;border-radius:6px}button{font:inherit;background:#66e6c3;color:#0d1724;border:0;border-radius:6px;padding:8px 12px;margin:8px 5px 0 0;cursor:pointer}article{border-top:1px solid #647891;padding:10px 0;overflow-wrap:anywhere}strong{color:#66e6c3}h2{margin-top:0}li{margin-bottom:6px}@media(max-width:750px){.grid{grid-template-columns:1fr}}
+body{background:#10080b;color:#fff4f4}header,section{background:#201014}header{border-color:#fa5d70}textarea{background:#10080b;border-color:#89515d}button{background:linear-gradient(115deg,#a61c35,#54101f);color:white;border:1px solid #fb657c}strong{color:#ff9bad}article{border-color:#89515d}button:disabled{opacity:.55}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #ffadbb;outline-offset:3px}.formats{font-size:.94rem;color:#efd1d8}details{margin-top:12px}#rejected{overflow-wrap:anywhere}footer a{color:#ff9bad}
 </style>
 <main>
-<header><span>SV · Khalid Aslaoui (SOOVENSO)</span><h1>SV Defender</h1><p>Corréler les alertes Wazuh et les blocs pfSense à partir de journaux locaux.</p></header>
-<div class="grid"><section><h2>Journaux JSONL</h2>
+<header><span>SV · Khalid Aslaoui (SOOVENSO)</span><h1>SV Defender v2</h1><p>Corréler les alertes Wazuh et les blocs pfSense à partir de journaux locaux.</p></header>
+<div class="grid"><section><h2>Journaux de sécurité</h2>
 <label for="wazuh">Alertes Wazuh</label><textarea id="wazuh" rows="6" spellcheck="false"></textarea>
-<label for="firewall">Événements pfSense normalisés</label><textarea id="firewall" rows="6" spellcheck="false"></textarea>
-<label for="wazuh-file">Importer un fichier Wazuh</label><input id="wazuh-file" type="file" accept=".jsonl,.log,.txt"><label for="firewall-file">Importer un fichier pfSense normalisé</label><input id="firewall-file" type="file" accept=".jsonl,.txt"><br><button id="demo">Charger la démo</button><button id="run">Analyser</button><button id="export" disabled>Exporter JSON</button>
-<p id="status" role="status"></p></section>
+<label for="firewall">pfSense · filterlog ou JSONL</label><textarea id="firewall" rows="6" spellcheck="false"></textarea>
+<label for="wazuh-file">Importer un fichier Wazuh</label><input id="wazuh-file" type="file" accept=".jsonl,.log,.txt"><label for="firewall-file">Importer un fichier pfSense</label><input id="firewall-file" type="file" accept=".jsonl,.log,.txt,.csv"><br><button id="demo">Charger la démo</button><button id="run">Analyser</button><button id="export" disabled>Exporter JSON</button>
+<p class="formats">Wazuh en JSONL. pfSense en filterlog IPv4 avec une date ISO et un fuseau, ou en JSONL. Les horodatages BSD sans année ni fuseau doivent être convertis avant l’import.</p>
+<p id="status" role="status"></p><details id="diagnostics" hidden><summary>Voir les lignes rejetées</summary><ul id="rejected"></ul></details></section>
 <section><h2>Événements à vérifier</h2><div id="results"></div></section></div>
 <section style="margin-top:18px"><h2>Dossier d’investigation</h2>
 <label for="case-list">Dossier</label><select id="case-list"><option value="">Sélectionner un dossier</option></select>
@@ -25,27 +27,43 @@
 <label for="decision">Statut</label><select id="decision"><option value="open">Ouvert</option><option value="reviewed">Examiné</option><option value="closed">Clôturé</option></select>
 <br><button id="save-case">Enregistrer</button><button id="export-case">Exporter le dossier</button>
 </div></section>
+<footer><a href="https://soovenso.github.io/sv-defender/">Accueil SV Defender</a></footer>
 </main>
 <script>
 const byId = id => document.getElementById(id);
 const validIp = value => typeof value === 'string' && /^(0|[1-9]\d{0,2})(\.(0|[1-9]\d{0,2})){3}$/.test(value) && value.split('.').every(n => Number(n) <= 255);
+function parseFilterlog(line) {
+  const match = line.match(/^(.*?)\bfilterlog(?:\[\d+\])?\s*(?::\s*|\s+\S+\s+-\s+(?:-|\[[^\]]*\])\s+)(.*)$/i);
+  if (!match) throw Error('Préfixe filterlog manquant');
+  const timestamp = match[1].match(/\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})(?=\s|$)/i)?.[0];
+  if (!timestamp) throw Error('Date ISO avec fuseau requise');
+  const fields = match[2].split(',').map(value => value.trim());
+  if (fields[8] === '6') throw Error('filterlog IPv6 non pris en charge');
+  if (fields.length < 20 || fields[8] !== '4') throw Error('Champs filterlog IPv4 incomplets');
+  if (!validIp(fields[19])) throw Error('IPv4 de destination invalide');
+  return {timestamp, action:fields[6], src_ip:fields[18], destination:fields[19], iface:fields[4]};
+}
+
 function parse(input, source) {
   if (input.length > 2_000_000) throw Error('Maximum 2 Mo de texte par source.');
   const events = [], errors = [];
   input.split(/\r?\n/).forEach((line,index) => {
     if (!line.trim()) return;
     try {
-      const row = JSON.parse(line);
+      const row = source === 'pfSense' && !line.trimStart().startsWith('{') ? parseFilterlog(line) : JSON.parse(line);
       const ip = source === 'Wazuh' ? row.data?.srcip : row.src_ip;
       const when = Date.parse(row.timestamp);
       const level = row.rule?.level;
-      if (!validIp(ip) || !Number.isFinite(when) || !/(Z|[+-]\d{2}:?\d{2})$/i.test(row.timestamp)) throw Error();
-      if (source === 'Wazuh' && (!Number.isInteger(level) || level < 0 || level > 16)) throw Error();
-      if (source === 'pfSense' && !['pass','block'].includes(row.action)) throw Error();
+      if (!validIp(ip)) throw Error('IPv4 source invalide ou absente');
+      if (!Number.isFinite(when) || !/(Z|[+-]\d{2}:?\d{2})$/i.test(row.timestamp)) throw Error('Horodatage invalide ou sans fuseau');
+      if (source === 'Wazuh' && (!Number.isInteger(level) || level < 0 || level > 16)) throw Error('Niveau Wazuh invalide');
+      if (source === 'pfSense' && !['pass','block'].includes(row.action)) throw Error('Action attendue : pass ou block');
       events.push({source, ip, when, timestamp:new Date(when).toISOString(),
         detail:source === 'Wazuh' ? String(row.rule.description || 'Alerte') : row.action,
-        ref:source + ' L' + (index+1), level});
-    } catch { errors.push(source + ' L' + (index+1)); }
+        ref:source + ' L' + (index+1), level, destination:row.destination, iface:row.iface});
+    } catch (error) {
+      errors.push(source + ' L' + (index+1) + ' · ' + (error instanceof SyntaxError ? 'JSON invalide' : error.message));
+    }
   });
   return {events, errors};
 }
@@ -72,20 +90,30 @@ const demoWazuh = [
   {timestamp:'2026-11-20T20:10:00Z',data:{srcip:'198.51.100.7'},rule:{level:8,description:'Alerte de surveillance (simulation)'}}
 ];
 const demoFirewall = [
-  {timestamp:'2026-11-20T20:01:00Z',src_ip:'192.0.2.20',action:'block'},
-  {timestamp:'2026-11-20T20:11:00Z',src_ip:'198.51.100.7',action:'pass'}
+  '2026-11-20T20:01:00Z lab filterlog: 5,,,120,em0,match,block,in,4,0x0,,64,123,0,DF,6,tcp,60,192.0.2.20,203.0.113.4',
+  '<134>1 2026-11-20T20:11:00Z lab filterlog 123 - - 7,,,121,em0,match,pass,in,4,0x0,,64,124,0,DF,6,tcp,60,198.51.100.7,203.0.113.4',
+  'Nov 20 20:12:00 lab filterlog: exemple sans fuseau'
 ];
 let report;
 function render() {
   byId('results').replaceChildren();
   byId('export').disabled = true;
+  byId('diagnostics').hidden = true;
+  byId('rejected').replaceChildren();
   try {
     const wazuh = parse(byId('wazuh').value,'Wazuh');
     const firewall = parse(byId('firewall').value,'pfSense');
     const results = correlate(wazuh.events,firewall.events);
     const errors = [...wazuh.errors,...firewall.errors];
     report = {results, errors};
-    byId('status').textContent = wazuh.events.length + ' alertes · ' + firewall.events.length + ' événements pare-feu · ' + errors.length + ' lignes rejetées' + (errors.length ? ' (' + errors.slice(0,12).join(', ') + (errors.length > 12 ? ', …' : '') + ')' : '');
+    byId('status').textContent = wazuh.events.length + ' alertes · ' + firewall.events.length + ' événements pare-feu · ' + errors.length + ' lignes rejetées';
+    byId('diagnostics').hidden = !errors.length;
+    for (const reason of errors.slice(0,50)) {
+      const row = document.createElement('li');
+      row.textContent = reason;
+      byId('rejected').append(row);
+    }
+    if (errors.length > 50) byId('status').textContent += ' · 50 erreurs affichées, export complet.';
     for (const finding of results.slice(0,100)) {
       const {alert,block} = finding;
       const row = document.createElement('article'), title = document.createElement('strong'), info = document.createElement('div');
@@ -104,7 +132,7 @@ function render() {
 }
 byId('demo').onclick = () => {
   byId('wazuh').value = demoWazuh.map(row => JSON.stringify(row)).join('\n');
-  byId('firewall').value = demoFirewall.map(row => JSON.stringify(row)).join('\n');
+  byId('firewall').value = demoFirewall.join('\n');
   render();
 };
 byId('run').onclick = render;
@@ -162,7 +190,7 @@ function selectCase(item) {
   byId('decision').value = item.state;
   const rows = timeline(item.finding).map(event => {
     const row = document.createElement('li');
-    row.textContent = event.timestamp + ' · ' + event.ref + ' · ' + event.detail;
+    row.textContent = event.timestamp + ' · ' + event.ref + ' · ' + event.detail + (event.destination ? ' · ' + event.iface + ' · ' + event.destination : '');
     return row;
   });
   byId('timeline').replaceChildren(...rows);
@@ -192,7 +220,7 @@ byId('save-case').onclick = () => {
 byId('export-case').onclick = () => {
   const text = ['# SV Defender', 'Khalid Aslaoui (SOOVENSO) · SV',
     analyst(active.finding,byId('analyst-language').value),
-    '## Chronologie', ...timeline(active.finding).map(event => '- ' + event.timestamp + ' · ' + event.ref + ' · ' + event.detail),
+    '## Chronologie', ...timeline(active.finding).map(event => '- ' + event.timestamp + ' · ' + event.ref + ' · ' + event.detail + (event.destination ? ' · ' + event.iface + ' · ' + event.destination : '')),
     '## Décision', byId('decision').selectedOptions[0].text,
     '## Observations', byId('notes').value].join('\n\n');
   download(text,'sv-defender-dossier.md');
@@ -217,3 +245,4 @@ refreshCases();
 byId('demo').onclick();
 </script>
 </html>
+
