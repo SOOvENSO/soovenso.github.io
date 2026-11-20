@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="SV Defender, un projet SOC de Khalid Aslaoui. Explorez la corrélation Wazuh et pfSense avec une démo interactive.">
+<title>SV Defender · Khalid Aslaoui</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0c1724;color:#edf7f9;font:16px/1.6 system-ui,sans-serif}main{max-width:1100px;margin:auto;padding:clamp(24px,6vw,72px)}header{color:#7ce6cc;font-weight:700}h1{font-size:clamp(52px,11vw,118px);letter-spacing:-.07em;line-height:1;margin:34px 0 16px}.intro{max-width:600px;font-size:clamp(18px,3.3vw,24px);color:#c5d4e0}.cta{display:inline-block;background:#7ce6cc;color:#0c1724;padding:12px 19px;border-radius:8px;font-weight:750;text-decoration:none}.example{margin-top:42px;padding:20px;border:1px solid #3a546b;border-radius:14px;background:#132338}.example h2{margin:0 0 10px}.events{display:grid;grid-template-columns:1fr 1fr;gap:12px}.event{padding:12px;background:#0c1724;border-radius:8px}.event span{color:#7ce6cc}footer{margin-top:30px;color:#c5d4e0}footer a{color:#7ce6cc}@media(max-width:540px){.events{grid-template-columns:1fr}}
+body{background:#0a0507;color:#fff4f4}main{max-width:1280px;padding:clamp(16px,4vw,48px)}header,.event span{color:#ff777f}.intro,footer{color:#e1c8cd}.hero{position:relative;min-height:540px;display:grid;align-items:center;isolation:isolate;overflow:hidden;border:1px solid #641824;border-radius:19px;background:#19070b}.scene{position:absolute;inset:0;z-index:-1;overflow:hidden}.scene img{width:100%;height:100%;display:block;object-fit:fill}.scene:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#080305 0%,#080305ed 24%,#0e030769 48%,transparent 65%);pointer-events:none}.hero-copy{padding:clamp(20px,5vw,70px);max-width:54%}.hero h1{font-size:clamp(48px,8vw,105px)}.cta,footer a.cta{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(120deg,#ad1427,#36060d 85%);color:white;border:1px solid #fa5969}.cta span{position:absolute;z-index:-1;right:0;top:50%;transform:translateY(-50%) rotate(-12deg);font-size:58px;color:#ff82912e;font-weight:900;line-height:1}.cta:hover{background:linear-gradient(120deg,#b92031,#510711)}.cta:focus-visible{outline:3px solid #fff;outline-offset:4px}.example{background:#190b10;border-color:#641824}.event{background:#0a0507}footer .cta{margin:10px}.eye{position:absolute;z-index:1;left:var(--eye-x,74.5%);top:var(--eye-y,24.3%);width:var(--eye-w,15%);height:var(--eye-h,19%);transform:translate(-50%,-50%);border-radius:50%;mix-blend-mode:screen;pointer-events:none}.eye i{position:absolute;inset:10% 20%;border-radius:50%;background:radial-gradient(ellipse,#010000 15%,#250006 30%,#ff4b5e80 53%,transparent 74%);animation:gaze 5.4s ease-in-out infinite;transform:translate(var(--look-x,0),var(--look-y,0))}@keyframes gaze{0%,100%{margin-left:-16%;opacity:.65}40%{margin-left:13%;opacity:1}66%{margin-left:0;opacity:.8}}@media(max-width:660px){.hero{display:flex;flex-direction:column;min-height:0;align-items:stretch}.scene{position:relative;aspect-ratio:16/9;z-index:auto;order:0}.scene:after{background:linear-gradient(0deg,#19070b,transparent 24%)}.hero-copy{max-width:none;order:1}.hero h1{margin-top:12px}}.eye:after{content:"";position:absolute;inset:0 -28%;border-radius:50%;background:#080103;transform:scaleY(0);animation:blink 7s infinite;opacity:.91}.eye{mix-blend-mode:normal}.eye i{mix-blend-mode:screen}@keyframes blink{0%,89%,95%,100%{transform:scaleY(0)}92%{transform:scaleY(.84)}}@media(prefers-reduced-motion:reduce){.eye i,.eye:after{animation:none;transform:none}}
+</style>
+<main><section class="hero" aria-label="SV Defender"><div class="scene"><img src="./red-room.webp" alt="Hacker en noir dans une salle rouge. Watch and beware. VENSO is watching you everywhere."><div class="eye" aria-hidden="true"><i></i></div></div><div class="hero-copy"><header>SV · Khalid Aslaoui (SOOVENSO)</header>SV · Khalid Aslaoui (SOOVENSO)</header>
+<h1>SV Defender</h1>
+<p class="intro">Un tableau de bord SOC pour rapprocher les alertes Wazuh et les blocages pfSense, examiner les preuves et exporter un dossier d’investigation.</p>
+<a class="cta" href="./demo.html"><span aria-hidden="true">SV</span>Essayer la démo</a></div></section>
+<section class="example"><h2>Exemple d’investigation</h2><div class="events"><div class="event"><span>20:00 UTC · Wazuh</span><br>Plusieurs échecs de connexion<br>Source 192.0.2.20</div><div class="event"><span>20:01 UTC · pfSense</span><br>Trafic bloqué<br>Source 192.0.2.20</div></div><p>La même adresse apparaît dans les deux journaux à une minute d’intervalle. Le dossier permet de vérifier ce rapprochement et de consigner la décision.</p></section>
+<footer>Données fictives fournies. Les imports restent dans le navigateur. <a class="cta" href="https://github.com/SOOvENSO"><span aria-hidden="true">SV</span>Portfolio GitHub</a></footer></main>
+<script>
+const hero = document.querySelector('.hero');
+const eye = document.querySelector('.eye');
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  hero.addEventListener('pointermove', event => {
+    const bounds = hero.getBoundingClientRect();
+    eye.style.setProperty('--look-x', ((event.clientX - bounds.left) / bounds.width - .5) * 34 + '%');
+    eye.style.setProperty('--look-y', ((event.clientY - bounds.top) / bounds.height - .5) * 22 + '%');
+  });
+  hero.addEventListener('pointerleave', () => {
+    eye.style.removeProperty('--look-x');
+    eye.style.removeProperty('--look-y');
+  });
+}
+</script>
+</html>
