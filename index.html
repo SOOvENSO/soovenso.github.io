@@ -19,9 +19,10 @@
 @media(prefers-reduced-motion:reduce){.wing,.eye:before{animation:none}.eye:before{transform:none}}
 header.hero{position:relative;isolation:isolate;overflow:hidden;min-height:293px}.hero-copy{position:relative;z-index:1}.hero h1{font-size:clamp(2.15rem,8vw,5.5rem)}.mascots{z-index:-1}.mascots:after{background:linear-gradient(90deg,#190a10 0%,#190a10e8 36%,#190a1066 60%,transparent 79%)}
 @media(max-width:600px){header.hero{padding-top:clamp(150px,44vw,230px)}.mascots{bottom:auto;aspect-ratio:2.1}.mascots:after{background:linear-gradient(0deg,#190a10,transparent 60%)}}
+ .music{margin-top:1rem;display:flex;align-items:center;gap:.65rem;flex-wrap:wrap}.music button{font:inherit;color:#fff4f4;background:#451824;border:1px solid #b4576b;border-radius:.45rem;padding:.4rem .7rem;cursor:pointer}.music button:focus-visible{outline:2px solid white;outline-offset:4px}.music small{color:#ecd4d8}
 </style>
 <main>
-<header class="hero"><div class="mascots" aria-hidden="true"><i class="wing left"></i><i class="wing right"></i><i class="eye first"></i><i class="eye second"></i></div><div class="hero-copy"><h1>SOOVENSO</h1><p>Khalid Aslaoui · Cybersecurity and AI automation</p><nav class="contacts" aria-label="Contact"><a href="mailto:khalidasslawi03@gmail.com">Email</a> · <a href="https://www.linkedin.com/in/khalid-aslaoui-64b99a417">LinkedIn</a> · <a href="https://github.com/SOOvENSO">GitHub</a></nav></div></header>
+<header class="hero"><div class="mascots" aria-hidden="true"><i class="wing left"></i><i class="wing right"></i><i class="eye first"></i><i class="eye second"></i></div><div class="hero-copy"><h1>SOOVENSO</h1><p>Khalid Aslaoui · Cybersecurity and AI automation</p><nav class="contacts" aria-label="Contact"><a href="mailto:khalidasslawi03@gmail.com">Email</a> · <a href="https://www.linkedin.com/in/khalid-aslaoui-64b99a417">LinkedIn</a> · <a href="https://github.com/SOOvENSO">GitHub</a></nav><div class="music"><button id="audio-toggle" type="button">♪ Play music</button><small>Epic Action · Lesfm &amp; Magnetic Trailer</small><span id="audio-status" role="status"></span><audio id="portfolio-audio" preload="none" loop src="./Epic%20Action.m4a"></audio></div></div></header>
 <section aria-labelledby="about"><h2 id="about">About</h2><p>I’m Khalid Aslaoui, a cybersecurity student based in Casablanca. I build hands-on projects in SOC investigations, blue-team monitoring, and workflow automation. I’m currently completing an internship at RMA Assurance Maroc under an internship agreement.</p></section>
 <section aria-labelledby="projects"><h2 id="projects">Projects</h2><div class="cards">
 <article><h3>SV Defender</h3><p class="tools">Wazuh · pfSense · JavaScript</p><p><strong>Problem</strong> Firewall and endpoint records live in separate logs.</p><p><strong>Result</strong> Matches alerts with nearby firewall blocks by source IP and exports an investigation report.</p><p class="flow">Wazuh alert → pfSense block → Report</p><a href="./sv-defender/">Open demo</a></article>
@@ -47,5 +48,41 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     mascots.style.removeProperty('--dy');
   });
 }
+</script>
+<script>
+(() => {
+  const audio = document.getElementById('portfolio-audio');
+  const button = document.getElementById('audio-toggle');
+  const status = document.getElementById('audio-status');
+  audio.volume = 0.22;
+  const sync = () => {
+    button.textContent = audio.paused ? '♪ Play music' : '❚❚ Pause music';
+  };
+  const attempt = async () => {
+    try { await audio.play(); status.textContent = ''; }
+    catch (error) {
+      if (error.name !== 'NotAllowedError' && error.name !== 'AbortError') {
+        status.textContent = 'Music unavailable.';
+      }
+    }
+    sync();
+  };
+  const firstClick = event => {
+    if (!button.contains(event.target) && audio.paused) void attempt();
+  };
+  document.addEventListener('click', firstClick, {once: true});
+  audio.addEventListener('play', () => {
+    document.removeEventListener('click', firstClick);
+    sync();
+  });
+  audio.addEventListener('pause', sync);
+  audio.addEventListener('error', () => { status.textContent = 'Music unavailable.'; });
+  button.addEventListener('click', () => {
+    document.removeEventListener('click', firstClick);
+    if (audio.paused) void attempt();
+    else audio.pause();
+  });
+  void attempt();
+})();
 </script>
 </html>
