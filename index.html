@@ -58,7 +58,7 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   const dialog = document.getElementById('project-dialog');
   const frame = document.getElementById('project-frame');
   let wantsMusic = true;
-  audio.volume = 0.22;
+  audio.volume = 0.45;
 
   function sync() {
     for (const button of buttons) button.textContent = audio.paused ? '♪ Play music' : '❚❚ Pause music';
