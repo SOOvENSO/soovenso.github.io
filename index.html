@@ -49,66 +49,69 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   });
 }
 </script>
+<dialog id="project-dialog" aria-labelledby="project-title"><div class="project-bar"><strong id="project-title"></strong><button type="button" id="project-music"></button><small id="project-audio-status" role="status"></small><form method="dialog"><button autofocus>Back to portfolio</button></form></div><iframe id="project-frame" title="Project demo"></iframe></dialog>
 <script>
 (() => {
   const audio = document.getElementById('portfolio-audio');
-  const button = document.getElementById('audio-toggle');
-  const status = document.getElementById('audio-status');
-  audio.volume = 0.22;
-  const sync = () => {
-    button.textContent = audio.paused ? '♪ Play music' : '❚❚ Pause music';
-  };
-  const attempt = async () => {
-    try { await audio.play(); status.textContent = ''; }
-    catch (error) {
-      if (error.name !== 'NotAllowedError' && error.name !== 'AbortError') {
-        status.textContent = 'Music unavailable.';
-      }
-    }
-    sync();
-  };
-  const firstClick = event => {
-    if (!button.contains(event.target) && audio.paused) void attempt();
-  };
-  document.addEventListener('click', firstClick, {once: true});
-  audio.addEventListener('play', () => {
-    document.removeEventListener('click', firstClick);
-    sync();
-  });
-  audio.addEventListener('pause', sync);
-  audio.addEventListener('error', () => { status.textContent = 'Music unavailable.'; });
-  button.addEventListener('click', () => {
-    document.removeEventListener('click', firstClick);
-    if (audio.paused) void attempt();
-    else audio.pause();
-  });
-  void attempt();
-})();
-</script>
-<dialog id="project-dialog" aria-labelledby="project-title"><div class="project-bar"><strong id="project-title"></strong><button type="button" id="project-music"></button><form method="dialog"><button autofocus>Back to portfolio</button></form></div><iframe id="project-frame" title="Project demo"></iframe></dialog>
-<script>
-(() => {
+  const buttons = [document.getElementById('audio-toggle'), document.getElementById('project-music')];
+  const statuses = [document.getElementById('audio-status'), document.getElementById('project-audio-status')];
   const dialog = document.getElementById('project-dialog');
   const frame = document.getElementById('project-frame');
+  let wantsMusic = true;
+  audio.volume = 0.22;
+
+  function sync() {
+    for (const button of buttons) button.textContent = audio.paused ? '♪ Play music' : '❚❚ Pause music';
+  }
+
+  function showStatus(message) {
+    for (const status of statuses) status.textContent = message;
+  }
+
+  function resumeMusic() {
+    if (!wantsMusic || !audio.paused) return;
+    audio.play().then(() => showStatus('')).catch(error => {
+      if (!wantsMusic || error.name === 'AbortError') return;
+      showStatus(error.name === 'NotAllowedError' ? 'Tap Play music to enable sound.' : 'Music unavailable.');
+    }).finally(sync);
+  }
+
+  for (const button of buttons) {
+    button.addEventListener('click', () => {
+      wantsMusic = audio.paused;
+      if (wantsMusic) resumeMusic();
+      else {
+        audio.pause();
+        showStatus('');
+      }
+    });
+  }
+  audio.addEventListener('play', sync);
+  audio.addEventListener('pause', sync);
+  audio.addEventListener('error', () => showStatus('Music unavailable.'));
+  sync();
+  resumeMusic();
+
+  document.addEventListener('click', event => {
+    if (buttons.some(button => button.contains(event.target))) return;
+    resumeMusic();
+  }, {capture: true, once: true});
+
   if (typeof dialog.showModal !== 'function') return;
   for (const link of document.querySelectorAll('[data-project]')) {
     link.addEventListener('click', event => {
       if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
       event.preventDefault();
+      resumeMusic();
       const title = link.closest('article').querySelector('h3').textContent;
       document.getElementById('project-title').textContent = title;
       frame.title = title;
-      frame.src = link.href;
       dialog.showModal();
+      frame.src = link.href;
     });
   }
-  dialog.addEventListener('close', () => { frame.removeAttribute('src'); });
-  const music = document.getElementById('audio-toggle');
-  const control = document.getElementById('project-music');
-  const update = () => { control.textContent = music.textContent; };
-  new MutationObserver(update).observe(music,{childList:true,subtree:true,characterData:true});
-  update();
-  control.addEventListener('click', () => music.click());
+  frame.addEventListener('load', () => { if (dialog.open) resumeMusic(); });
+  dialog.addEventListener('close', () => { frame.removeAttribute('src'); resumeMusic(); });
 })();
 </script>
 </html>
