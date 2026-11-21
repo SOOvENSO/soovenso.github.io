@@ -20,13 +20,13 @@
 header.hero{position:relative;isolation:isolate;overflow:hidden;min-height:293px}.hero-copy{position:relative;z-index:1}.hero h1{font-size:clamp(2.15rem,8vw,5.5rem)}.mascots{z-index:-1}.mascots:after{background:linear-gradient(90deg,#190a10 0%,#190a10e8 36%,#190a1066 60%,transparent 79%)}
 @media(max-width:600px){header.hero{padding-top:clamp(150px,44vw,230px)}.mascots{bottom:auto;aspect-ratio:2.1}.mascots:after{background:linear-gradient(0deg,#190a10,transparent 60%)}}
  .music{margin-top:1rem;display:flex;align-items:center;gap:.65rem;flex-wrap:wrap}.music button{font:inherit;color:#fff4f4;background:#451824;border:1px solid #b4576b;border-radius:.45rem;padding:.4rem .7rem;cursor:pointer}.music button:focus-visible{outline:2px solid white;outline-offset:4px}.music small{color:#ecd4d8}
-</style>
+#project-dialog{box-sizing:border-box;width:min(1200px,100%);height:96dvh;max-width:100%;max-height:100%;padding:0;background:#211016;color:#fff4f4;border:1px solid #914150;border-radius:12px}#project-dialog[open]{display:flex;flex-direction:column}#project-dialog::backdrop{background:#10080bdd}.project-bar{display:flex;align-items:center;justify-content:space-between;gap:.7rem;flex-wrap:wrap;padding:.7rem}.project-bar form{margin:0}.project-bar button{font:inherit;color:inherit;background:#451824;border:1px solid #b4576b;border-radius:6px;padding:.4rem .65rem;cursor:pointer}#project-frame{width:100%;min-height:0;flex:1;border:0;background:#10080b}</style>
 <main>
 <header class="hero"><div class="mascots" aria-hidden="true"><i class="wing left"></i><i class="wing right"></i><i class="eye first"></i><i class="eye second"></i></div><div class="hero-copy"><h1>SOOVENSO</h1><p>Khalid Aslaoui · Cybersecurity and AI automation</p><nav class="contacts" aria-label="Contact"><a href="mailto:khalidasslawi03@gmail.com">Email</a> · <a href="https://www.linkedin.com/in/khalid-aslaoui-64b99a417">LinkedIn</a> · <a href="https://github.com/SOOvENSO">GitHub</a></nav><div class="music"><button id="audio-toggle" type="button">♪ Play music</button><small>Epic Action · Lesfm &amp; Magnetic Trailer</small><span id="audio-status" role="status"></span><audio id="portfolio-audio" preload="none" loop src="./Epic%20Action.m4a"></audio></div></div></header>
 <section aria-labelledby="about"><h2 id="about">About</h2><p>I’m Khalid Aslaoui, a cybersecurity student based in Casablanca. I build hands-on projects in SOC investigations, blue-team monitoring, and workflow automation. I’m currently completing an internship at RMA Assurance Maroc under an internship agreement.</p></section>
-<section aria-labelledby="projects"><h2 id="projects">Projects</h2><p>Project links open in a new tab so you can keep the music playing here.</p><div class="cards">
-<article><h3>SV Defender</h3><p class="tools">Wazuh · pfSense · JavaScript</p><p><strong>Problem</strong> Firewall and endpoint records live in separate logs.</p><p><strong>Result</strong> Matches alerts with nearby firewall blocks by source IP and exports an investigation report.</p><p class="flow">Wazuh alert → pfSense block → Report</p><a target="_blank" rel="noopener" href="./sv-defender/">Open demo</a></article>
-<article><h3>SV Investigation Console</h3><p class="tools">JavaScript · JSON · Markdown</p><p><strong>Problem</strong> Incident evidence needs a chronological record.</p><p><strong>Result</strong> Tested the workflow from importing a simulated SSH log to selecting evidence and exporting a report.</p><p class="flow">Import → Select evidence → Export</p><a target="_blank" rel="noopener" href="./sv-investigation-console/">Open demo</a></article>
+<section aria-labelledby="projects"><h2 id="projects">Projects</h2><div class="cards">
+<article><h3>SV Defender</h3><p class="tools">Wazuh · pfSense · JavaScript</p><p><strong>Problem</strong> Firewall and endpoint records live in separate logs.</p><p><strong>Result</strong> Matches alerts with nearby firewall blocks by source IP and exports an investigation report.</p><p class="flow">Wazuh alert → pfSense block → Report</p><a data-project href="./sv-defender/">Open demo</a></article>
+<article><h3>SV Investigation Console</h3><p class="tools">JavaScript · JSON · Markdown</p><p><strong>Problem</strong> Incident evidence needs a chronological record.</p><p><strong>Result</strong> Tested the workflow from importing a simulated SSH log to selecting evidence and exporting a report.</p><p class="flow">Import → Select evidence → Export</p><a data-project href="./sv-investigation-console/">Open demo</a></article>
 <article><h3>SV SOC Triage</h3><p class="tools">Wazuh · pfSense · JavaScript</p><p><strong>Problem</strong> Manually matching alerts and firewall logs takes time.</p><p><strong>Result</strong> Flags candidate matches for analyst review directly in the browser.</p><p class="flow">Alert + firewall event → Review</p><a target="_blank" rel="noopener" href="https://github.com/SOOvENSO/sv-soc-triage">View repository</a></article>
 <article><h3>Active Directory Security Lab</h3><p class="tools">AD DS · DNS · PowerShell · Python</p><p><strong>Problem</strong> A small network needs centralized account management and visibility into failed logons.</p><p><strong>Result</strong> Documented the lab architecture, scripted account setup, and tested the log analyzer on sample data.</p><p class="flow">AD account setup → Event 4625 → Analysis</p><a target="_blank" rel="noopener" href="https://github.com/SOOvENSO/sv-ad-security-lab">View repository</a></article>
 <article><h3>Dar Zitoune</h3><p class="tools">HTML · CSS · JavaScript</p><p><strong>Problem</strong> Restaurant staff receive repetitive questions in French and Darija.</p><p><strong>Result</strong> The browser demo answers menu and opening-time questions and queues requests that need staff review.</p><p class="flow">Question → Answer or staff queue</p><a target="_blank" rel="noopener" href="https://github.com/SOOvENSO/dar-zitoune-assistant">View repository</a></article>
@@ -83,6 +83,32 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     else audio.pause();
   });
   void attempt();
+})();
+</script>
+<dialog id="project-dialog" aria-labelledby="project-title"><div class="project-bar"><strong id="project-title"></strong><button type="button" id="project-music"></button><form method="dialog"><button autofocus>Back to portfolio</button></form></div><iframe id="project-frame" title="Project demo"></iframe></dialog>
+<script>
+(() => {
+  const dialog = document.getElementById('project-dialog');
+  const frame = document.getElementById('project-frame');
+  if (typeof dialog.showModal !== 'function') return;
+  for (const link of document.querySelectorAll('[data-project]')) {
+    link.addEventListener('click', event => {
+      if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      const title = link.closest('article').querySelector('h3').textContent;
+      document.getElementById('project-title').textContent = title;
+      frame.title = title;
+      frame.src = link.href;
+      dialog.showModal();
+    });
+  }
+  dialog.addEventListener('close', () => { frame.removeAttribute('src'); });
+  const music = document.getElementById('audio-toggle');
+  const control = document.getElementById('project-music');
+  const update = () => { control.textContent = music.textContent; };
+  new MutationObserver(update).observe(music,{childList:true,subtree:true,characterData:true});
+  update();
+  control.addEventListener('click', () => music.click());
 })();
 </script>
 </html>
