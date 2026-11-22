@@ -1,0 +1,33 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SV Decoy Monitor</title><style>
+*{box-sizing:border-box}body{margin:0;background:#100a0d;color:#fff1f4;font:16px/1.6 system-ui}main{max-width:850px;margin:auto;padding:clamp(16px,5vw,54px)}header,section{border:1px solid #713342;background:#201016;padding:clamp(16px,4vw,32px);border-radius:16px;margin-bottom:16px}h1{font-size:clamp(2.4rem,7vw,4.7rem);line-height:1;margin:.3em 0}button{font:inherit;color:white;background:#75203a;border:1px solid #b65873;border-radius:8px;padding:.55rem .8rem;margin:.25rem .2rem .25rem 0;cursor:pointer}button:disabled{opacity:.55;cursor:default}button:focus-visible{outline:3px solid white}li{overflow-wrap:anywhere;margin-bottom:12px}small{color:#ffc0ce}a{color:#ffc0ce}
+</style></head><body><main><header><small>SOOVENSO · Khalid Aslaoui</small><h1>SV Decoy Monitor</h1><p>Simulation dans le navigateur. Cette démo ne collecte aucune requête serveur ni donnée de visiteurs.</p><button id="normal">Simuler une visite normale</button><button id="decoy">Simuler un accès au leurre</button><p id="message" role="status"></p></header><section><h2>Alertes <span id="count">0</span></h2><ul id="events"></ul><button id="export" disabled>Exporter le rapport JSON</button><button id="reset">Réinitialiser</button></section><a href="../">Portfolio SOOVENSO</a></main><script>let events=[];
+const list=document.getElementById('events');
+const message=document.getElementById('message');
+const exportButton=document.getElementById('export');
+function render(){
+ list.replaceChildren();
+ document.getElementById('count').textContent=events.length;
+ exportButton.disabled=!events.length;
+ for(const event of [...events].reverse()){
+  const row=document.createElement('li');
+  const label=document.createElement('p');
+  label.textContent='#'+event.id+' · '+event.timestamp+' · '+event.resource+' · '+event.status;
+  const review=document.createElement('button');
+  review.textContent='Marquer comme examiné';
+  review.disabled=event.status==='Examiné';
+  review.onclick=()=>{event.status='Examiné';render();message.textContent='Alerte examinée.';};
+  row.append(label,review);list.append(row);
+ }
+}
+document.getElementById('normal').onclick=()=>{message.textContent='Visite ordinaire simulée. Aucune alerte ajoutée.';};
+document.getElementById('decoy').onclick=()=>{
+ events.push({id:events.length+1,timestamp:new Date().toISOString(),resource:'/demo-backup',reason:'Accès simulé au leurre',status:'À vérifier'});
+ render();message.textContent='Accès simulé enregistré dans cette page.';
+};
+document.getElementById('reset').onclick=()=>{events=[];render();message.textContent='Démonstration réinitialisée.';};
+exportButton.onclick=()=>{
+ const url=URL.createObjectURL(new Blob([JSON.stringify({environment:'browser-simulation',alerts:events},null,2)],{type:'application/json'}));
+ const link=document.createElement('a');link.href=url;link.download='sv-decoy-report.json';link.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+render();</script></body></html>
