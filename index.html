@@ -30,9 +30,9 @@ header.hero{position:relative;isolation:isolate;overflow:hidden;min-height:293px
 <style>
 #portfolio-intro{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#10080b;color:#fff4f4;z-index:100}
 #portfolio-intro:not([open]){display:none}
-#portfolio-intro[open]{display:grid;grid-template-rows:minmax(0,1fr) auto}
-#portfolio-intro video{display:block;width:100%;height:100%;object-fit:contain}
-.intro-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:.7rem;padding:.8rem}
+#portfolio-intro[open]{display:block}
+#portfolio-intro video{display:block;width:100%;height:100%;object-fit:cover}
+.intro-actions{position:absolute;top:.8rem;right:.8rem;top:calc(.8rem + env(safe-area-inset-top));right:calc(.8rem + env(safe-area-inset-right));z-index:1}
 .intro-actions button{font:inherit;color:inherit;background:#451824;border:1px solid #b4576b;border-radius:6px;padding:.5rem .8rem;cursor:pointer}
 .intro-actions button:focus-visible{outline:2px solid white;outline-offset:3px}
 main h1[tabindex="-1"]:focus{outline:none}
