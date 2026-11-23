@@ -97,7 +97,8 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     if (location.hash) return;
     if (typeof intro.showModal === 'function') intro.showModal();
     else intro.setAttribute('open', '');
-    teaser.src = teaser.dataset.src;
+    const mobile = matchMedia('(pointer: coarse)').matches || /iPhone|iPod/.test(navigator.userAgent);
+    teaser.src = mobile ? './soovenso-intro-mobile.mp4' : teaser.dataset.src;
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
       showIntroControls();
       return;
