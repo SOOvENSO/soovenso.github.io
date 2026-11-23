@@ -22,13 +22,14 @@ header.hero{position:relative;isolation:isolate;overflow:hidden;min-height:293px
  .music{margin-top:1rem;display:flex;align-items:center;gap:.65rem;flex-wrap:wrap}.music button{font:inherit;color:#fff4f4;background:#451824;border:1px solid #b4576b;border-radius:.45rem;padding:.4rem .7rem;cursor:pointer}.music button:focus-visible{outline:2px solid white;outline-offset:4px}.music small{color:#ecd4d8}
 #project-dialog{box-sizing:border-box;width:min(1200px,100%);height:96dvh;max-width:100%;max-height:100%;padding:0;background:#211016;color:#fff4f4;border:1px solid #914150;border-radius:12px}#project-dialog[open]{display:flex;flex-direction:column}#project-dialog::backdrop{background:#10080bdd}.project-bar{display:flex;align-items:center;justify-content:space-between;gap:.7rem;flex-wrap:wrap;padding:.7rem}.project-bar form{margin:0}.project-bar button{font:inherit;color:inherit;background:#451824;border:1px solid #b4576b;border-radius:6px;padding:.4rem .65rem;cursor:pointer}#project-frame{width:100%;min-height:0;flex:1;border:0;background:#10080b}</style>
 <dialog id="portfolio-intro" aria-label="SOOVENSO introduction">
-  <video id="intro-video" playsinline preload="none" aria-label="SOOVENSO teaser" data-src="./SOOVENSO-Teaser-Animal-Sounds-Earlier.mp4"></video>
+  <video id="intro-video" playsinline webkit-playsinline preload="metadata" aria-label="SOOVENSO teaser" data-src="./SOOVENSO-Teaser-Animal-Sounds-Earlier.mp4"></video>
   <div class="intro-actions">
     <button type="button" id="intro-skip" autofocus>Skip intro</button>
   </div>
 </dialog>
 <style>
-#portfolio-intro{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#10080b;color:#fff4f4}
+#portfolio-intro{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#10080b;color:#fff4f4;z-index:100}
+#portfolio-intro:not([open]){display:none}
 #portfolio-intro[open]{display:grid;grid-template-rows:minmax(0,1fr) auto}
 #portfolio-intro video{display:block;width:100%;height:100%;object-fit:contain}
 .intro-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:.7rem;padding:.8rem}
@@ -77,33 +78,52 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   const teaser = document.getElementById('intro-video');
   let introTimer;
 
+  function closeIntro() {
+    if (!intro.hasAttribute('open')) return;
+    if (typeof intro.close === 'function') intro.close();
+    else {
+      intro.removeAttribute('open');
+      intro.dispatchEvent(new Event('close'));
+    }
+  }
+
+  function showIntroControls() {
+    if (!intro.hasAttribute('open')) return;
+    clearTimeout(introTimer);
+    teaser.controls = true;
+  }
+
   function startIntro() {
-    if (typeof intro.showModal !== 'function' || location.hash || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    intro.showModal();
+    if (location.hash) return;
+    if (typeof intro.showModal === 'function') intro.showModal();
+    else intro.setAttribute('open', '');
     teaser.src = teaser.dataset.src;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      showIntroControls();
+      return;
+    }
     teaser.play().catch(error => {
-      if (!intro.open) return;
+      if (!intro.hasAttribute('open')) return;
       if (error.name !== 'NotAllowedError') {
-        intro.close();
+        showIntroControls();
         return;
       }
       teaser.muted = true;
       teaser.controls = true;
-      teaser.play().catch(() => { if (intro.open) intro.close(); });
+      teaser.play().catch(showIntroControls);
     });
   }
 
   function armIntroTimeout() {
     clearTimeout(introTimer);
-    introTimer = setTimeout(() => { if (intro.open) intro.close(); }, 8000);
+    introTimer = setTimeout(showIntroControls, 8000);
   }
 
   teaser.addEventListener('playing', () => clearTimeout(introTimer));
   teaser.addEventListener('waiting', armIntroTimeout);
-  for (const event of ['ended', 'error']) {
-    teaser.addEventListener(event, () => { if (intro.open) intro.close(); });
-  }
-  document.getElementById('intro-skip').addEventListener('click', () => intro.close());
+  teaser.addEventListener('ended', closeIntro);
+  teaser.addEventListener('error', showIntroControls);
+  document.getElementById('intro-skip').addEventListener('click', closeIntro);
   intro.addEventListener('close', () => {
     clearTimeout(introTimer);
     teaser.pause();
@@ -124,7 +144,7 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   }
 
   function resumeMusic() {
-    if (intro.open || !wantsMusic || !audio.paused) return;
+    if (intro.hasAttribute('open') || !wantsMusic || !audio.paused) return;
     audio.play().then(() => showStatus('')).catch(error => {
       if (!wantsMusic || error.name === 'AbortError') return;
       showStatus(error.name === 'NotAllowedError' ? 'Tap Play music to enable sound.' : 'Music unavailable.');
@@ -146,7 +166,7 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   audio.addEventListener('error', () => showStatus('Music unavailable.'));
   sync();
   startIntro();
-  if (intro.open) armIntroTimeout();
+  if (intro.hasAttribute('open')) armIntroTimeout();
   else resumeMusic();
 
   document.addEventListener('click', event => {
